@@ -75,7 +75,7 @@ planet-port-harmony 是 Planet Port 的鸿蒙生态版本。参考 planet-port-i
 
 | # | 功能 | 鸿蒙实现要点 |
 |---|---|---|
-| 11 | 共享身份 / 每行星独立身份（互不可关联），切换即生效、切回恢复 | Android v1.4.0 存储层 + 核心身份路径分流直译（D11） |
+| 11 | 共享身份 / 每行星独立身份（互不可关联），切换经核心重启生效、切回恢复 | Android v1.4.0 存储层 + 核心身份路径分流直译（D11） |
 
 ### C. 网络连接（8 项）
 
@@ -122,11 +122,11 @@ planet-port-harmony 是 Planet Port 的鸿蒙生态版本。参考 planet-port-i
 | 35 | 关于页（构建时间/代码版本）+ 商标保护校验（默认隐藏） | 隐藏采用 `if(false)` 条件，不删除代码 |
 | 36 | 单 VPN 互斥 → 被其它 VPN 挤掉后回落掉线状态 | 直译 |
 
-### G. 既定平台降级（3 项，文案管理预期）
+### G. 既定平台差异（3 项，文案管理预期）
 
-1. 无 On Demand 保活（iOS NEOnDemandRuleConnect 无等价物）
-2. 无开机自启（重启手机后需手动打开 App 重连；打开 App 即自动恢复）
-3. 系统单 VPN 互斥（与 iOS 行为一致，非降级，文案说明）
+1. 降级·无 On Demand 保活（iOS NEOnDemandRuleConnect 无等价物）
+2. 降级·无开机自启（重启手机后需手动打开 App 重连；打开 App 即自动恢复）
+3. 差异·系统单 VPN 互斥（与 iOS 行为一致，非功能降级，文案说明）
 
 ---
 
@@ -168,7 +168,7 @@ planet-port-harmony/
 | D1 | 核心宿主在扩展进程（对齐 iOS 双进程）；快照文件 + 事件唤醒跨进程契约 |
 | D2 | NAPI 三函数族（start/stop/protect 回调/snapshot JSON），零包路径 |
 | D3 | 热重配 = destroy + create 同进程换代 + Dataplane.swap(fd)，核心不重启 |
-| D4 | protect 双轨：API≥22 用 protectProcessNet()，否则 per-socket protect(fd) |
+| D4 | protect 双轨：API≥22 用 protectProcessNet()，否则 per-socket protect(fd)；per-socket 若被拒则 minAPI 提至 22（调研 R2 回退） |
 | D5 | 配置主路径 = 共享沙盒 config/*.json + commonEvent 唤醒 + level-triggered 全量重读 |
 | D6 | DNS 三模式经 VpnConfig.dnsAddresses；不设置时回退行为待 Spike S4 |
 | D7 | 默认路由 + allow-lan 前缀差集挖洞直译 |
@@ -184,7 +184,7 @@ planet-port-harmony/
 
 ### D12 ZTQR1/ZTP 字节兼容硬约束
 
-二维码分片协议三端互通是硬验收：鸿蒙 ArkTS 实现必须通过 iOS/Android 的金标向量（Base45/CRC32/Deflate raw/帧格式/ZTP KV 编解码）。跨端真机互扫验证进 M3 验收。Deflate 用 zlib raw 模式（Android 已趟通字节兼容）。
+二维码分片协议三端互通是硬验收：鸿蒙 ArkTS 实现必须通过 iOS/Android 的金标向量（Base45/CRC32/Deflate raw/帧格式/ZTP KV 编解码）。跨端真机互扫验证进入最终验收（§7.2-3）。Deflate 用 zlib raw 模式（Android 已趟通字节兼容）。
 
 ### D13 无真机轨道的「可编译可单测」标准
 
@@ -214,7 +214,8 @@ A6 CI + 签名链                            （36 项功能清单逐项过 + �
 
 - 轨道 A 内部串行（A0→A6），A2/A4 与 A3 弱耦合可穿插。
 - 轨道 B 启动时间取决于真机；B1–B2 若推翻 D3/D4/D5，按 D14 隔离面返工，A 轨其余产物不动。
-- 两轨在 B3 汇合进入联调；里程碑 M1 隧道 / M2 功能 / M3 体验 / M4 发布映射到 B3–B4 验收段。
+- 两轨在 B3 汇合进入联调。
+- M1 隧道 / M2 功能 / M3 体验 / M4 发布是**验收口径**（按功能域），A0–A6 / B0–B4 是**执行顺序**（按环境依赖）；M1–M3 的验收在 B3–B4 集中执行，M4 为发布段。
 
 ---
 
