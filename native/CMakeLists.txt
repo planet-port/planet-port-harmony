@@ -51,5 +51,12 @@ target_include_directories(zt_core PUBLIC
 
 # ---- host 冒烟（Task 6） ----
 if(PP_BUILD_SMOKE)
-    # Task 6 填充
+    add_executable(smoke
+        smoke/smoke_main.cpp
+        bridge/CoreBridge.cpp
+        $<TARGET_OBJECTS:zt_core>
+    )
+    target_include_directories(smoke PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    # 链接对象库以继承 zt_core 的 PUBLIC include 目录（ZeroTierOne.h 等）
+    target_link_libraries(smoke PRIVATE zt_core)
 endif()
