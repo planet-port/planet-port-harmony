@@ -16,7 +16,7 @@
 - GPL 血统零引入：不参考任何 GPL 分支项目（kaaass/ZerotierFix 等）
 - 基线：minAPI 12（OHOS_PLATFORM_LEVEL=12）/ targetAPI 23 / arm64-v8a，C++17
 - 编译定义：`ZT_SDK=0`、`ZT_NO_PEER_METRICS=1`（Metrics.cpp 必须保留在编译集，见 Android CMakeLists 注释）
-- 仓库结构对齐规格 §4：`Core/`（拉取产物）、`core/`（自研 C++）、`entry/`、`scripts/`
+- 仓库结构对齐规格 §4：`Core/`（拉取产物）、`native/`（自研 C++）、`entry/`、`scripts/`
 - 提交信息：Conventional Commits，中文 description/Body，禁止 Co-authored-by
 - git 一律 `--no-pager`
 - 提交时机：每任务完成并验证后提交，禁止 git push
@@ -29,7 +29,7 @@
 | K2 | SDK 未随 IDE 预装、命令行找不到 ohos.toolchain.cmake | 请用户打开一次 DevEco Studio 完成首次 SDK 下载（GUI 一次），之后回到命令行 |
 | K3 | hvigor 配置 schema 随版本变化导致 assembleHap 报错 | 按报错逐项修配置文件，不改任务边界 |
 | K4 | ZeroTier 源码在 OHOS musl 下平台检测失败（先例改了 Constants.hpp，我们不许） | 仅允许 `-D` 宏注入（如 `-DZT_...`）；不可达则**停止并报告用户**，不得擅自给 Core/ 打补丁 |
-| K5 | entry 模块 externalNativeOptions 不接受跨目录（`../core/`）CMake 路径 | 在 entry/src/main/cpp/CMakeLists.txt 放一行 `add_subdirectory` 指回根级 core/ |
+| K5 | entry 模块 externalNativeOptions 不接受跨目录（`../native/`）CMake 路径 | 在 entry/src/main/cpp/CMakeLists.txt 放一行 `add_subdirectory` 指回根级 native/ |
 | K6 | ZeroTier 1.16.2 编译还需 Http.cpp/http-parser（先例编了，Android 没编） | bootstrap 增拷对应文件并加入编译集；仍是对官方源码的子集选取，不算补丁 |
 
 ---
@@ -114,7 +114,7 @@ Core/
 /build/
 /entry/build/
 /entry/.cxx/
-/core/build/
+/native/build/
 *.hap
 *.so
 *.a
@@ -540,11 +540,11 @@ else
     done
     cp "$SRC/version.h" "$CORE_DIR/"
     mkdir -p "$CORE_DIR/ext/nlohmann" \
-        "$CORE_DIR/ext/prometheus-cpp-lite-1.0/core/include" \
+        "$CORE_DIR/ext/prometheus-cpp-lite-1.0/native/include" \
         "$CORE_DIR/ext/prometheus-cpp-lite-1.0/simpleapi/include"
     cp "$SRC/ext/nlohmann/json.hpp" "$CORE_DIR/ext/nlohmann/"
-    cp -R "$SRC/ext/prometheus-cpp-lite-1.0/core/include/prometheus" \
-        "$CORE_DIR/ext/prometheus-cpp-lite-1.0/core/include/"
+    cp -R "$SRC/ext/prometheus-cpp-lite-1.0/native/include/prometheus" \
+        "$CORE_DIR/ext/prometheus-cpp-lite-1.0/native/include/"
     cp -R "$SRC/ext/prometheus-cpp-lite-1.0/simpleapi/include/prometheus" \
         "$CORE_DIR/ext/prometheus-cpp-lite-1.0/simpleapi/include/"
     cp -R "$SRC/ext/arm32-neon-salsa2012-asm" "$SRC/ext/x64-salsa2012-asm" "$CORE_DIR/ext/"
@@ -600,17 +600,17 @@ git commit -m "build: ZeroTier 1.16.2 核心拉取脚本
 ### Task 4: CMake 交叉编译 ZeroTier 核心（arm64-v8a，S1 编译验证）
 
 **Files:**
-- Create: `core/CMakeLists.txt`
-- Create: `core/bridge/CoreBridge.h`（最小骨架头，本任务只含版本查询；Task 5/6 扩展）
-- Create: `core/bridge/CoreBridge.cpp`
+- Create: `native/CMakeLists.txt`
+- Create: `native/bridge/CoreBridge.h`（最小骨架头，本任务只含版本查询；Task 5/6 扩展）
+- Create: `native/bridge/CoreBridge.cpp`
 
 **Interfaces:**
 - Consumes: `Core/node/*.cpp`、`Core/osdep/OSUtils.cpp`、`Core/include/`、`Core/ext/`（Task 3 产出）
-- Produces: CMake 目标 `zt_core`（ZeroTier 核心 OBJECT 库）；CMake 函数 `pp_core_version()`（CoreBridge，返回 `const char*`，如 `"1.16.2"`）；交叉编译入口 `core/CMakeLists.txt`。Task 5 在此之上加 NAPI 壳，Task 6 加 host 冒烟目标。
+- Produces: CMake 目标 `zt_core`（ZeroTier 核心 OBJECT 库）；CMake 函数 `pp_core_version()`（CoreBridge，返回 `const char*`，如 `"1.16.2"`）；交叉编译入口 `native/CMakeLists.txt`。Task 5 在此之上加 NAPI 壳，Task 6 加 host 冒烟目标。
 
 - [ ] **Step 1: 写 CoreBridge 最小骨架**
 
-`core/bridge/CoreBridge.h`：
+`native/bridge/CoreBridge.h`：
 
 ```cpp
 // CoreBridge — ZeroTier C API 的 C++ 包装（直译自 iOS ZTBridge.mm 的最小骨架）。
@@ -625,7 +625,7 @@ const char *coreVersion();
 } // namespace pp
 ```
 
-`core/bridge/CoreBridge.cpp`：
+`native/bridge/CoreBridge.cpp`：
 
 ```cpp
 #include "CoreBridge.h"
@@ -648,10 +648,10 @@ const char *coreVersion()
 
 > `snprintf` 需要 `<cstdio>`，ZeroTierOne.h 传递包含；若编译报缺声明，在文件头补 `#include <cstdio>`。
 
-- [ ] **Step 2: 写 core/CMakeLists.txt**
+- [ ] **Step 2: 写 native/CMakeLists.txt**
 
 ```cmake
-# core/CMakeLists.txt — libplanetport_core 构建入口
+# native/CMakeLists.txt — libplanetport_core 构建入口
 #
 # 零补丁原则：Core/（bootstrap 拉取）不做任何修改；平台适配只经 -D 注入。
 # 三个目标：
@@ -695,7 +695,7 @@ target_include_directories(zt_core PUBLIC
     ${ZT_DIR}/include/
     ${ZT_DIR}/node/
     ${ZT_DIR}/ext/
-    ${ZT_DIR}/ext/prometheus-cpp-lite-1.0/core/include/
+    ${ZT_DIR}/ext/prometheus-cpp-lite-1.0/native/include/
     ${ZT_DIR}/ext/prometheus-cpp-lite-1.0/simpleapi/include/
 )
 
@@ -711,13 +711,13 @@ endif()
 - [ ] **Step 3: 首次交叉编译探测（零补丁直编）**
 
 ```bash
-cmake -B core/build-ohos -S core \
+cmake -B native/build-ohos -S core \
   -DCMAKE_TOOLCHAIN_FILE="/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake" \
   -DCMAKE_BUILD_TYPE=Release \
   -DOHOS_ARCH=arm64-v8a \
   -DOHOS_PLATFORM_LEVEL=12 \
   -DOHOS_STL=c++_shared
-cmake --build core/build-ohos -j8
+cmake --build native/build-ohos -j8
 ```
 
 Expected: 编译完成（K4/K6 处置见 Step 4）。产物为对象文件集合（zt_core OBJECT 库无链接产物，本步验证 = 全部 .cpp 编译通过）。
@@ -728,20 +728,20 @@ Expected: 编译完成（K4/K6 处置见 Step 4）。产物为对象文件集合
 - 缺 `Http.cpp`/`http_parser`（K6）：bootstrap.sh 的 osdep 拷贝循环加入 `Http.cpp`，ext 拷贝加 `http-parser` 目录，CMake zt_core 源集加 `${ZT_DIR}/osdep/Http.cpp` 与 `${ZT_DIR}/ext/http-parser/http_parser.c`（需要 `enable_language(C)`）
 - 平台检测类错误（K4）：在 `add_compile_definitions` 注入对应 `-D`（如 musl 下 `_GNU_SOURCE`）。**禁止修改 Core/ 内文件**；若 -D 无法解决，停止并报告用户（零补丁红线，需用户裁决）
 
-每处调整后在 `core/CMakeLists.txt` 头部注释区记录一行原因。
+每处调整后在 `native/CMakeLists.txt` 头部注释区记录一行原因。
 
 - [ ] **Step 5: 验证对象产物为 arm64**
 
 ```bash
-find core/build-ohos -name 'Node.cpp.o' -exec file {} \;
+find native/build-ohos -name 'Node.cpp.o' -exec file {} \;
 ```
 
-Expected: 输出含 `arm64`（aarch64）。若无 .o 文件，用 `find core/build-ohos -name '*.o' | head` 定位实际产物名再 file。
+Expected: 输出含 `arm64`（aarch64）。若无 .o 文件，用 `find native/build-ohos -name '*.o' | head` 定位实际产物名再 file。
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add core/ scripts/bootstrap.sh
+git add native/ scripts/bootstrap.sh
 git commit -m "build(core): ZeroTier 1.16.2 核心 OHOS arm64 交叉编译通过
 
 对齐 Android 编译清单（node 全集 GLOB + OSUtils.cpp，
@@ -755,8 +755,8 @@ git commit -m "build(core): ZeroTier 1.16.2 核心 OHOS arm64 交叉编译通过
 ### Task 5: NAPI 壳 + entry 集成 + HAP 内含 native 库
 
 **Files:**
-- Create: `core/napi/planetport_napi.cpp`
-- Modify: `core/CMakeLists.txt`（NAPI SHARED 目标落地）
+- Create: `native/napi/planetport_napi.cpp`
+- Modify: `native/CMakeLists.txt`（NAPI SHARED 目标落地）
 - Modify: `entry/build-profile.json5`（externalNativeOptions）
 - Modify: `entry/src/main/ets/pages/Index.ets`（显示核心版本）
 - Create: `entry/src/main/ets/common/CoreRuntime.ets`（native 模块 ArkTS 包装）
@@ -767,7 +767,7 @@ git commit -m "build(core): ZeroTier 1.16.2 核心 OHOS arm64 交叉编译通过
 
 - [ ] **Step 1: 写 NAPI 绑定**
 
-`core/napi/planetport_napi.cpp`：
+`native/napi/planetport_napi.cpp`：
 
 ```cpp
 // planetport NAPI 绑定 — 控制流与状态流入口（不过包，规格 D2）
@@ -811,7 +811,7 @@ extern "C" __attribute__((constructor)) void RegisterPlanetportModule(void)
 
 - [ ] **Step 2: CMake 加 SHARED 目标**
 
-`core/CMakeLists.txt` 中将「NAPI 动态库占位」注释段替换为：
+`native/CMakeLists.txt` 中将「NAPI 动态库占位」注释段替换为：
 
 ```cmake
 # ---- NAPI 动态库（仅 OHOS 工具链下链接 libace_napi） ----
@@ -849,7 +849,7 @@ endif()
 {
   "buildOption": {
     "externalNativeOptions": {
-      "path": "../core/CMakeLists.txt",
+      "path": "../native/CMakeLists.txt",
       "arguments": "-DOHOS_STL=c++_shared -DOHOS_PLATFORM_LEVEL=12",
       "abiFilters": ["arm64-v8a"],
       "cppFlags": ""
@@ -940,7 +940,7 @@ Expected: BUILD SUCCESSFUL；unzip 列表含 `libs/arm64-v8a/libplanetport_core.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add core/ entry/
+git add native/ entry/
 git commit -m "feat(core): NAPI 壳接入工程，HAP 打包 libplanetport_core.so
 
 napi 模块 planetport_core 导出 getCoreVersion，首页展示
@@ -952,18 +952,18 @@ ZeroTier 核心版本号（S1 验收的逻辑链路，真机内验证待 B 轨�
 ### Task 6: host 冒烟测试（macOS 本机验证核心可跑）
 
 **Files:**
-- Create: `core/smoke/smoke_main.cpp`
-- Modify: `core/bridge/CoreBridge.h`、`core/bridge/CoreBridge.cpp`（加 identity 冒烟函数）
-- Modify: `core/CMakeLists.txt`（smoke 目标）
+- Create: `native/smoke/smoke_main.cpp`
+- Modify: `native/bridge/CoreBridge.h`、`native/bridge/CoreBridge.cpp`（加 identity 冒烟函数）
+- Modify: `native/CMakeLists.txt`（smoke 目标）
 
 **Interfaces:**
 - Consumes: `zt_core` 对象库（Task 4）
 - Produces: `pp::smokeIdentityGen(const char *homeDir)`（CoreBridge：生成节点身份到 homeDir，返回 10 位节点地址字符串；错误返回空串）——A2 的 CoreBridge 完整版在此基础上生长
-- Produces: host 冒烟二进制 `core/build-host/smoke`
+- Produces: host 冒烟二进制 `native/build-host/smoke`
 
 - [ ] **Step 1: CoreBridge 加身份生成**
 
-`core/bridge/CoreBridge.h` 在 `coreVersion()` 声明后追加：
+`native/bridge/CoreBridge.h` 在 `coreVersion()` 声明后追加：
 
 ```cpp
 // 生成节点身份到 homeDir/identity.secret（已存在则复用）。
@@ -971,7 +971,7 @@ ZeroTier 核心版本号（S1 验收的逻辑链路，真机内验证待 B 轨�
 const char *smokeIdentityGen(const char *homeDir);
 ```
 
-`core/bridge/CoreBridge.cpp` 追加（ZT_Node_new 需要的最小回调集——全部空实现，冒烟只验证核心链接与身份生成路径）：
+`native/bridge/CoreBridge.cpp` 追加（ZT_Node_new 需要的最小回调集——全部空实现，冒烟只验证核心链接与身份生成路径）：
 
 ```cpp
 #include <cstdio>
@@ -1040,7 +1040,7 @@ const char *smokeIdentityGen(const char *homeDir)
 
 - [ ] **Step 2: 写冒烟 main**
 
-`core/smoke/smoke_main.cpp`：
+`native/smoke/smoke_main.cpp`：
 
 ```cpp
 // host 冒烟：macOS 本机验证 ZeroTier 核心 + CoreBridge 链接可跑（S1 无真机部分）
@@ -1080,7 +1080,7 @@ int main()
 
 - [ ] **Step 3: CMake 加 smoke 目标**
 
-`core/CMakeLists.txt` 的 `if(PP_BUILD_SMOKE)` 段替换为：
+`native/CMakeLists.txt` 的 `if(PP_BUILD_SMOKE)` 段替换为：
 
 ```cmake
 if(PP_BUILD_SMOKE)
@@ -1096,9 +1096,9 @@ endif()
 - [ ] **Step 4: 构建 host 冒烟（macOS 原生工具链，非交叉）**
 
 ```bash
-cmake -B core/build-host -S core -DCMAKE_BUILD_TYPE=Debug -DPP_BUILD_SMOKE=ON
-cmake --build core/build-host -j8
-./core/build-host/smoke
+cmake -B native/build-host -S core -DCMAKE_BUILD_TYPE=Debug -DPP_BUILD_SMOKE=ON
+cmake --build native/build-host -j8
+./native/build-host/smoke
 ```
 
 Expected: 输出 `PASS coreVersion = 1.16.2`、`PASS identityGen addr = <10位>`、`SMOKE PASS`，退出码 0。
@@ -1107,7 +1107,7 @@ Expected: 输出 `PASS coreVersion = 1.16.2`、`PASS identityGen addr = <10位>`
 - [ ] **Step 5: 验证交叉编译仍通过（防 host 改动破坏 OHOS 路径）**
 
 ```bash
-cmake --build core/build-ohos -j8
+cmake --build native/build-ohos -j8
 ```
 
 Expected: BUILD SUCCESSFUL。
@@ -1115,7 +1115,7 @@ Expected: BUILD SUCCESSFUL。
 - [ ] **Step 6: Commit**
 
 ```bash
-git add core/ .gitignore
+git add native/ .gitignore
 git commit -m "test(core): host 冒烟验证核心与 CoreBridge 身份路径
 
 macOS 本机编译同一份 zt_core + CoreBridge（规格 D13）：
@@ -1162,8 +1162,8 @@ ArkUI 原生写成。多行星并存、多网络同连、默认路由与 DNS 均
 host 冒烟（macOS 本机验证核心，无需真机）：
 
 ​```bash
-cmake -B core/build-host -S core -DCMAKE_BUILD_TYPE=Debug -DPP_BUILD_SMOKE=ON
-cmake --build core/build-host -j8 && ./core/build-host/smoke
+cmake -B native/build-host -S core -DCMAKE_BUILD_TYPE=Debug -DPP_BUILD_SMOKE=ON
+cmake --build native/build-host -j8 && ./native/build-host/smoke
 ​```
 
 ## 许可
@@ -1192,8 +1192,8 @@ cmake --build core/build-host -j8 && ./core/build-host/smoke
 - [ ] **Step 3: 全量回归三链路**
 
 ```bash
-./core/build-host/smoke                                    # host 冒烟
-cmake --build core/build-ohos -j8                          # OHOS 交叉编译
+./native/build-host/smoke                                    # host 冒烟
+cmake --build native/build-ohos -j8                          # OHOS 交叉编译
 "/Applications/DevEco-Studio.app/Contents/tools/hvigor/bin/hvigorw" \
   assembleHap --mode module -p product=default -p buildMode=debug --no-daemon  # HAP
 ```
@@ -1215,9 +1215,9 @@ build-notes 落档零补丁处置过程与 B 轨待验证项。"
 ## 计划完成标准（A1 验收）
 
 1. `./scripts/bootstrap.sh` 幂等可用，SHA256 防线验证过
-2. `core/build-ohos` arm64 交叉编译通过（ZeroTier 核心 + CoreBridge + NAPI）
+2. `native/build-ohos` arm64 交叉编译通过（ZeroTier 核心 + CoreBridge + NAPI）
 3. `entry-default-unsigned.hap` 内含 `libs/arm64-v8a/libplanetport_core.so`
-4. `./core/build-host/smoke` 输出 SMOKE PASS（coreVersion=1.16.2 + 身份生成 10 位地址）
+4. `./native/build-host/smoke` 输出 SMOKE PASS（coreVersion=1.16.2 + 身份生成 10 位地址）
 5. ZeroTier 核心零补丁（Core/ 与官方 tarball 逐字节一致，子集拷贝除外）
 6. 全部提交符合 Conventional Commits 中文规范，未 push
 
