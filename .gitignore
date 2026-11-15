@@ -1,0 +1,28 @@
+# ZeroTier 核心源码（bootstrap 拉取，不入库）
+Core/
+
+# 构建产物
+/build/
+/entry/build/
+/entry/.cxx/
+/core/build/
+*.hap
+*.so
+*.a
+
+# hvigor / ohpm
+/.hvigor/
+/oh_modules/
+/entry/oh_modules/
+**/oh_modules/
+
+# 本地环境
+/local.properties
+/.idea/
+*.DS_Store
+
+# 签名材料（永不入库）
+*.p12
+*.p7b
+*.cer
+/signing/
