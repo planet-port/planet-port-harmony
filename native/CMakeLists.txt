@@ -15,8 +15,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(ZT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Core)
 
 # ---- 平台适配（零补丁：仅编译定义，禁改 Core/ 源码） ----
+# 注：不定义 ZT_SDK——定义它（含 =0）会把 ZT_PEER_ACTIVITY_TIMEOUT 切到 SDK
+# 分支的 30s（Constants.hpp #ifndef 测试的是 defined-ness），Android 版未定义。
 add_compile_definitions(
-    ZT_SDK=0            # 不编译 controller
     ZT_NO_PEER_METRICS=1 # 见 Android CMakeLists 注释：Metrics.cpp 必须保留在编译集
 )
 

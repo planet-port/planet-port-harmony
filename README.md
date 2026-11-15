@@ -14,6 +14,7 @@ ArkUI 原生写成。多行星并存、多网络同连、默认路由与 DNS 均
 
 ```bash
 ./scripts/bootstrap.sh   # 拉取 ZeroTier 1.16.2 核心（SHA256 锁定，不入库）
+# hvigorw 为 DevEco 默认安装路径，按实际位置调整
 "/Applications/DevEco-Studio.app/Contents/tools/hvigor/bin/hvigorw" \
   assembleHap --mode module -p product=default -p buildMode=debug --no-daemon
 ```

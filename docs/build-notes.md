@@ -19,8 +19,12 @@ OHOS 交叉编译（`native/build-ohos`，arm64-v8a）**尚未执行**——DevE
 
 当前唯一的编译定义注入是**先例对齐项**而非平台探测产物：
 
-- `ZT_SDK=0`（不编译 controller，Android 版同款）
 - `ZT_NO_PEER_METRICS=1`（Android 版 CMakeLists 注释：Metrics.cpp 必须保留在编译集）
+- ~~`ZT_SDK=0`~~ **已移除**（2026-11-15 审查修正）：Android 版从未定义该宏；
+  且 `-DZT_SDK=0` 是"定义了它"——`Constants.hpp` 的 `#ifndef ZT_SDK` 测试
+  defined-ness，会把 `ZT_PEER_ACTIVITY_TIMEOUT` 切到 SDK 分支的 30s，
+  与 controller 编译无关（controller 代码在官方 tarball 的 `nonfree/controller/`，
+  本就不在 node/ 内、bootstrap 也从不拷贝 nonfree/，GPL 血统零引入由此保证）
 
 DevEco 就绪后的补跑路径（按计划 Task 4 Step 3~5）：
 
