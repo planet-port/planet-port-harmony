@@ -53,6 +53,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "OHOS")
     add_library(planetport_core SHARED
         napi/planetport_napi.cpp
         bridge/CoreBridge.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../entry/src/main/cpp/anchor.cpp # hvigor native 探测锚点，见文件头注释
         $<TARGET_OBJECTS:zt_core>
     )
     # 与 smoke 同款：$<TARGET_OBJECTS> 不传递对象库的 PUBLIC include 目录，

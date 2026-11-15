@@ -81,6 +81,29 @@ bootstrap 两个变量重跑，无补丁重放成本。
   stub 被丢弃；两次运行地址不同，homeDir 目录被创建但保持为空。
   真正的 identity.secret 落盘复用（0600）在 A2 的状态目录重定向 hook 中实现
 
+### hvigorw assembleHap 首次构建（2026-11-15 补验，三链路全通）
+
+`hvigorw assembleHap --mode module -p product=default -p buildMode=debug --no-daemon`
+BUILD SUCCESSFUL（34 tasks），产物 HAP 内含 `libs/arm64-v8a/libplanetport_core.so`
+（2.6 MB）与 `libc++_shared.so`。过程中修复三个事实性问题：
+
+- **K3 命中·根 build-profile.json5 结构错误**：`products` 被放在顶层，
+  正确位置在 `app` 内（hvigor schema 校验报 propertyNames enum 错误）
+- **K5 命中·hvigor native 任务的启用条件不是 externalNativeOptions**：
+  `nativeTaskCondition`（cmake-util.js）最终判定是模块 sourceSet 是否存在
+  `src/main/cpp` 目录（core-source-set-impl.js 的目录探测），仅配置
+  externalNativeOptions 会让 ConfigureCmake 等任务 1ms 空跑、HAP 无 .so。
+  解法：`entry/src/main/cpp/anchor.cpp` 锚点文件（加入 planetport_core
+  编译集，空翻译单元），CMake 工程仍在仓库顶层 `native/`
+- **工程缺 hvigorfile.ts**：根（appTasks）与 entry/（hapTasks）两级都需要；
+  `hvigor/hvigor-config.json5` 的 `dependencies` 留空即可——hvigorw 自动
+  link DevEco 自带 `@ohos/hvigor-ohos-plugin`（6.26.20 与 CLI 配对），
+  写显式版本反而会触发 pnpm 从 registry 拉取而 404（npmmirror 不镜像
+  华为私有包；华为 registry 为 repo.harmonyos.com/npm）
+
+环境约定：命令行构建需 `export DEVECO_SDK_HOME="/Applications/DevEco-Studio.app/Contents/sdk"`。
+未签名 HAP（`entry-default-unsigned.hap`）为 A0 阶段预期，签名链在 A6。
+
 ### 已知未验证项（待 B 轨真机）
 
 - `libplanetport_core.so` 在真机加载（NAPI 模块注册、ArkTS `import` 可用）
