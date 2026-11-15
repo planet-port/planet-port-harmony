@@ -22,11 +22,14 @@ export DEVECO_SDK_HOME="/Applications/DevEco-Studio.app/Contents/sdk"
 
 产物：`entry/build/default/outputs/default/entry-default-unsigned.hap`
 
-host 冒烟（macOS 本机验证核心，无需真机）：
+host 冒烟与单测（macOS 本机验证核心与数据面，无需真机）：
 
 ```bash
-cmake -B native/build-host -S native -DCMAKE_BUILD_TYPE=Debug -DPP_BUILD_SMOKE=ON
-cmake --build native/build-host -j8 && ./native/build-host/smoke
+cmake -B native/build-host -S native -DCMAKE_BUILD_TYPE=Debug \
+  -DPP_BUILD_SMOKE=ON -DPP_BUILD_TESTS=ON
+cmake --build native/build-host -j8
+./native/build-host/pp_tests   # 数据面金标向量（gtest，首次构建自动下载）
+./native/build-host/smoke      # 核心版本 + 身份生成链路
 ```
 
 ## 许可

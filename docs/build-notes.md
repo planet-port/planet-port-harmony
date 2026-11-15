@@ -109,3 +109,26 @@ BUILD SUCCESSFUL（34 tasks），产物 HAP 内含 `libs/arm64-v8a/libplanetport
 - `libplanetport_core.so` 在真机加载（NAPI 模块注册、ArkTS `import` 可用）
 - TUN 数据面（VpnExt 壳 + TunnelController，计划 3 范围）
 - protect（底层 socket 绑定物理网卡，防路由环）
+
+## A2 数据面直译与集成回归（2026-11-15）
+
+三链路全绿（host 全新树 `build-w2final`）：`pp_tests` 116/116（11 套件）、
+`smoke` PASS；OHOS arm64 交叉编译全新树一次通过；`assembleHap` BUILD
+SUCCESSFUL，HAP 内 `libplanetport_core.so`（3.5 MB）已含数据面八模块符号。
+
+- **直译范围**：ArpTable/NdpTable/NAT44/NetworkContext/RoutePlanner/
+  FrameConverter/Dataplane/UdpCom + CoreBridge 扩充（数据面事件 Hooks、
+  stateFile 原子落盘、peers 拉取）。行为规格 = Android v1.6.0 Kotlin，
+  接口参考 = iOS ZTBridge.mm
+- **集成缺口**（Task 9 抓到）：OHOS SHARED 目标源集是 A1 旧集、未含
+  dataplane/*.cpp——已补入 `native/CMakeLists.txt`，musl 下零错误
+- **源缺陷裁决**（详见 .superpowers/sdd/progress.md 挂账）：
+  NdpTable `allNodesMulticast` 按 Kotlin 直译为 `2::1`（源漏设首字节
+  0xff，修复决策待真机联调）；NA 链路层选项类型按 Android 上游当日
+  修复版语义分派（NA=2/NS=1）；NAT44 lookup 空闲超时按金标向量落地
+- **getifaddrs**：musl 提供，RoutePlanner 直编零问题；host 侧接口名
+  过滤在 Android 四前缀外加了 "en"（brief 场景授权，OHOS 不受影响）
+- **gtest 下载抖动**：github tarball 偶发 status 52/挂起，可用
+  `-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=<已下载源>` 复用绕过
+- **hvigorw 调用**：仓库无本地 hvigorw，用 DevEco 自带
+  `/Applications/DevEco-Studio.app/Contents/tools/hvigor/bin/hvigorw`

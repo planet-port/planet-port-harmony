@@ -53,6 +53,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "OHOS")
     add_library(planetport_core SHARED
         napi/planetport_napi.cpp
         bridge/CoreBridge.cpp
+        # A2 数据面八模块（与 pp_tests 源集一致；A3 NAPI 接线前暂无调用者，
+        # SHARED 目标全量编入，符号为 A3 备好）
+        dataplane/ArpTable.cpp dataplane/NdpTable.cpp dataplane/NAT44.cpp
+        dataplane/NetworkContext.cpp dataplane/RoutePlanner.cpp
+        dataplane/FrameConverter.cpp dataplane/Dataplane.cpp dataplane/UdpCom.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/../entry/src/main/cpp/anchor.cpp # hvigor native 探测锚点，见文件头注释
         $<TARGET_OBJECTS:zt_core>
     )
@@ -90,4 +95,26 @@ if(PP_BUILD_SMOKE)
     target_include_directories(smoke PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     # 链接对象库以继承 zt_core 的 PUBLIC include 目录（ZeroTierOne.h 等）
     target_link_libraries(smoke PRIVATE zt_core)
+endif()
+
+# ---- host 单测（A2：gtest 经 FetchContent；仅非 OHOS 工具链） ----
+if(PP_BUILD_TESTS AND NOT CMAKE_SYSTEM_NAME STREQUAL "OHOS")
+    include(FetchContent)
+    FetchContent_Declare(googletest
+        URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+    # 测试源 GLOB 吸收：模块任务只落 tests/test_*.cpp，不改本文件
+    file(GLOB PP_TEST_SRC CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
+    add_executable(pp_tests
+        ${PP_TEST_SRC}
+        dataplane/ArpTable.cpp dataplane/NdpTable.cpp dataplane/NAT44.cpp
+        dataplane/NetworkContext.cpp dataplane/RoutePlanner.cpp
+        dataplane/FrameConverter.cpp dataplane/Dataplane.cpp dataplane/UdpCom.cpp
+        bridge/CoreBridge.cpp $<TARGET_OBJECTS:zt_core>
+    )
+    target_include_directories(pp_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(pp_tests PRIVATE zt_core GTest::gtest_main)
+    include(GoogleTest)
+    gtest_discover_tests(pp_tests)
 endif()
