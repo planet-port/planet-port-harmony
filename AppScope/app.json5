@@ -1,6 +1,6 @@
 {
   "app": {
-    "bundleName": "com.planetport.harmony",
+    "bundleName": "cn.imgozi.h.planetport",
     "vendor": "planetport",
     "versionCode": 1,
     "versionName": "0.1.0",

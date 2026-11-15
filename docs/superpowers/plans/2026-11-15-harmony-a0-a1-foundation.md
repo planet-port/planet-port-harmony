@@ -100,7 +100,7 @@ Expected: 输出 cmake version ≥ 3.18。
 - Create: `entry/src/main/resources/base/media/app_icon.png`（占位图标，后续资产任务替换）
 
 **Interfaces:**
-- Produces: bundleName `com.planetport.harmony`；可构建的空 HAP，产物路径 `entry/build/default/outputs/default/entry-default-unsigned.hap`；页面路由 `pages/Index`。后续任务在此基础上叠加 native 集成。
+- Produces: bundleName `cn.imgozi.h.planetport`；可构建的空 HAP，产物路径 `entry/build/default/outputs/default/entry-default-unsigned.hap`；页面路由 `pages/Index`。后续任务在此基础上叠加 native 集成。
 
 - [ ] **Step 1: 写工程根配置**
 
@@ -208,7 +208,7 @@ Core/
 ```json5
 {
   "app": {
-    "bundleName": "com.planetport.harmony",
+    "bundleName": "cn.imgozi.h.planetport",
     "vendor": "planetport",
     "versionCode": 1,
     "versionName": "0.1.0",
@@ -448,7 +448,7 @@ git add .gitignore oh-package.json5 build-profile.json5 hvigor/ AppScope/ entry/
 git commit -m "build: 鸿蒙工程骨架与首次可构建 HAP
 
 Stage 模型最小工程：AppScope + entry 模块 + 占位首页，
-bundleName com.planetport.harmony，兼容 SDK 5.0.0(API 12)。
+bundleName cn.imgozi.h.planetport，兼容 SDK 5.0.0(API 12)。
 构建产物与 hvigor/ohpm 缓存全部 gitignore。
 VPN 扩展注册与 native 集成留给后续任务。"
 ```
