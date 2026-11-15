@@ -1,12 +1,20 @@
+import { CoreRuntime } from '../common/CoreRuntime';
+
 @Entry
 @Component
 struct Index {
+  private version: string = '未加载';
+
+  aboutToAppear(): void {
+    this.version = CoreRuntime.getCoreVersion();
+  }
+
   build() {
     Column({ space: 12 }) {
       Text('Planet Port')
         .fontSize(24)
         .fontWeight(FontWeight.Bold)
-      Text('工程骨架占位页')
+      Text(`ZeroTier 核心 ${this.version}`)
         .fontSize(14)
         .fontColor('#666666')
     }

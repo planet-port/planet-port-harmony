@@ -3,7 +3,7 @@
 # 零补丁原则：Core/（bootstrap 拉取）不做任何修改；平台适配只经 -D 注入。
 # 三个目标：
 #   zt_core        — ZeroTier 核心（OHOS 交叉 / macOS host 通用）
-#   planetport_core — NAPI 动态库（仅 OHOS 工具链下编；Task 5 完成 napi 源后启用）
+#   planetport_core — NAPI 动态库（仅 OHOS 工具链下编）
 #   smoke          — host 冒烟可执行（仅 -DPP_BUILD_SMOKE=ON；Task 6）
 cmake_minimum_required(VERSION 3.18.1)
 project(planetport_core C CXX)
@@ -46,8 +46,36 @@ target_include_directories(zt_core PUBLIC
     ${ZT_DIR}/ext/prometheus-cpp-lite-1.0/simpleapi/include/
 )
 
-# ---- NAPI 动态库（Task 5 填充 napi 源；本任务先验证核心可编） ----
-# 暂以 INTERFACE 占位，Task 5 替换为 SHARED 目标。
+# ---- NAPI 动态库（仅 OHOS 工具链下链接 libace_napi） ----
+if(CMAKE_SYSTEM_NAME STREQUAL "OHOS")
+    add_library(planetport_core SHARED
+        napi/planetport_napi.cpp
+        bridge/CoreBridge.cpp
+        $<TARGET_OBJECTS:zt_core>
+    )
+    # 与 smoke 同款：$<TARGET_OBJECTS> 不传递对象库的 PUBLIC include 目录，
+    # 链接对象库以继承 ZeroTierOne.h（CoreBridge.cpp）等头文件路径；
+    # PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} 供 napi 源找 bridge/CoreBridge.h
+    target_include_directories(planetport_core PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(planetport_core PRIVATE zt_core)
+    if(NOT DEFINED OHOS_NDK_HOME)
+        set(OHOS_NDK_HOME "$ENV{OHOS_NDK_HOME}")
+    endif()
+    if(NOT OHOS_NDK_HOME)
+        set(OHOS_NDK_HOME "/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/native")
+    endif()
+    if(OHOS_ARCH STREQUAL "arm64-v8a")
+        set(OHOS_LLVM aarch64-linux-ohos)
+    else()
+        set(OHOS_LLVM arm-linux-ohos)
+    endif()
+    set(OHOS_SYSROOT_LIB ${OHOS_NDK_HOME}/sysroot/usr/lib/${OHOS_LLVM})
+    target_link_libraries(planetport_core PRIVATE
+        ${OHOS_SYSROOT_LIB}/libace_napi.z.so
+        ${OHOS_SYSROOT_LIB}/libhilog_ndk.z.so
+        -lpthread -ldl -lm
+    )
+endif()
 
 # ---- host 冒烟（Task 6） ----
 if(PP_BUILD_SMOKE)
