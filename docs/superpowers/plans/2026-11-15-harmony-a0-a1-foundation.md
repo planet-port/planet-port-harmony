@@ -15,7 +15,7 @@
 - ZeroTier 核心来源：官方 1.16.2 tarball，SHA256 `2c607f573c6e38815433af289d364a689a203b18b51125f06c4472014d0657f0`，bootstrap 拉取不入库，**零本地补丁**（红线：禁止修改 `Core/` 内任何文件；平台适配只允许 `-D` 编译定义；若 `-D` 不可达，停下报告用户裁决）
 - GPL 血统零引入：不参考任何 GPL 分支项目（kaaass/ZerotierFix 等）
 - 基线：minAPI 12（OHOS_PLATFORM_LEVEL=12）/ targetAPI 23 / arm64-v8a，C++17
-- 编译定义：`ZT_SDK=0`、`ZT_NO_PEER_METRICS=1`（Metrics.cpp 必须保留在编译集，见 Android CMakeLists 注释）
+- 编译定义：不定义 `ZT_SDK`（2026-11-15 审查修正：`#ifndef ZT_SDK` 测 defined-ness，定义它含 =0 会把 peer 超时切到 30s；Android 版未定义）、`ZT_NO_PEER_METRICS=1`（Metrics.cpp 必须保留在编译集，见 Android CMakeLists 注释）
 - 仓库结构对齐规格 §4：`Core/`（拉取产物）、`native/`（自研 C++）、`entry/`、`scripts/`
 - 提交信息：Conventional Commits，中文 description/Body，禁止 Co-authored-by
 - git 一律 `--no-pager`
@@ -668,8 +668,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(ZT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Core)
 
 # ---- 平台适配（零补丁：仅编译定义，禁改 Core/ 源码） ----
+# 注：不定义 ZT_SDK（审查修正，原因见 native/CMakeLists.txt 头部注释）
 add_compile_definitions(
-    ZT_SDK=0            # 不编译 controller
     ZT_NO_PEER_METRICS=1 # 见 Android CMakeLists 注释：Metrics.cpp 必须保留在编译集
 )
 
@@ -745,7 +745,7 @@ git add native/ scripts/bootstrap.sh
 git commit -m "build(core): ZeroTier 1.16.2 核心 OHOS arm64 交叉编译通过
 
 对齐 Android 编译清单（node 全集 GLOB + OSUtils.cpp，
-排除 EmbeddedNetworkController），ZT_SDK=0 与 ZT_NO_PEER_METRICS。
+排除 EmbeddedNetworkController），ZT_NO_PEER_METRICS（不定义 ZT_SDK）。
 附 CoreBridge 最小骨架（coreVersion）。
 零补丁：平台适配仅经编译定义注入。<如有 K4/K6 处置，在此行概述>"
 ```
@@ -967,7 +967,7 @@ ZeroTier 核心版本号（S1 验收的逻辑链路，真机内验证待 B 轨�
 
 ```cpp
 // 生成节点身份到 homeDir/identity.secret（已存在则复用）。
-// 返回 10 位节点地址（十进制字符串）；失败返回空串。
+// 返回 10 位节点地址（十六进制小写字符串，Address::toString/hex10 规范形式）；失败返回空串。
 const char *smokeIdentityGen(const char *homeDir);
 ```
 
