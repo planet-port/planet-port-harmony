@@ -5,17 +5,23 @@
 
 ## ZeroTier 1.16.2 OHOS 交叉编译处置（A1）
 
-### 平台检测处置：尚未执行（待 DevEco）
+### 平台检测处置：零补丁直编一次通过，零注入（2026-11-15 补验）
 
-OHOS 交叉编译（`native/build-ohos`，arm64-v8a）**尚未执行**——DevEco Studio
-工具链（含 OHOS SDK/NDK）尚未就绪，平台适配探测随之待补。因此：
+OHOS 交叉编译（`native/build-ohos`，arm64-v8a）于 2026-11-15 用 DevEco Studio
+自带 NDK 补跑完成，结论：
 
-- 是否直编通过：未知，未验证
-- 是否需要注入 `-D` 宏（K4 类，如 musl 下平台检测失败）：未知，未发生任何注入
-- 是否需要增拷 osdep/ext 文件（K6 类，如 `Http.cpp`/`http-parser`）：未知，未发生任何增拷
-  （bootstrap 子集拷贝清单按 Android 版先例预设：node 全集 + include + osdep 六文件
-  + version.h + ext 四项；CMake 编译集为 node 全集 GLOB 排除
-  `EmbeddedNetworkController.cpp` + `osdep/OSUtils.cpp`）
+- **零补丁直编一次通过**：无需任何 K4/K6 处置即编译、链接成功，产出
+  `libplanetport_core.so`（SHARED 目标）与全部 zt_core 对象文件，
+  `file` 验证均为 ARM aarch64 ELF 64-bit
+- **无 `-D` 注入**（K4 类不适用）：musl 平台检测由 OHOS 工具链自身解决——
+  `ohos.toolchain.cmake` 对 C/C++/ASM 统一追加 `-D__MUSL__`，ZeroTier
+  源码据此走 musl 分支，无需手工注入
+- **无 osdep/ext 增拷**（K6 类不适用）：bootstrap 子集拷贝清单按 Android 版
+  先例预设（node 全集 + include + osdep 六文件 + version.h + ext 四项）已够用，
+  grep 验证 node/ 与 osdep/ 无 `Http.cpp`/`http_parser` 引用；CMake 编译集为
+  node 全集 GLOB + `osdep/OSUtils.cpp`（`EmbeddedNetworkController.cpp` 在官方
+  tarball 位于 nonfree/controller/，bootstrap 从不拷贝 nonfree/，node/ 内本无
+  此文件，无需排除——原 REMOVE_ITEM 空集操作已删）
 
 当前唯一的编译定义注入是**先例对齐项**而非平台探测产物：
 
@@ -26,7 +32,16 @@ OHOS 交叉编译（`native/build-ohos`，arm64-v8a）**尚未执行**——DevE
   与 controller 编译无关（controller 代码在官方 tarball 的 `nonfree/controller/`，
   本就不在 node/ 内、bootstrap 也从不拷贝 nonfree/，GPL 血统零引入由此保证）
 
-DevEco 就绪后的补跑路径（按计划 Task 4 Step 3~5）：
+两点补验期观察：
+
+- `OHOS_PLATFORM_LEVEL=12` 在本 NDK 中是**惰性参数**（配置期 CMake 提示
+  not used）：本 SDK（native apiVersion 26）的 `sdk_native_platforms.cmake`
+  把 min/max platform level 固定为 1，sysroot 单一平台级别，无 API 级分支；
+  minAPI 12 约束实际由 HAP 侧 `build-profile.json5` 的
+  `compatibleSdkVersion: "5.0.0(12)"` 承担（已在位）
+- 编译期唯一噪音是 clang 对 `--gcc-toolchain` 的 unused-argument 警告，无害
+
+补跑命令（已按上述执行，2026-11-15）：
 
 ```bash
 cmake -B native/build-ohos -S native \
@@ -71,4 +86,3 @@ bootstrap 两个变量重跑，无补丁重放成本。
 - `libplanetport_core.so` 在真机加载（NAPI 模块注册、ArkTS `import` 可用）
 - TUN 数据面（VpnExt 壳 + TunnelController，计划 3 范围）
 - protect（底层 socket 绑定物理网卡，防路由环）
-- OHOS musl 下交叉编译本身的平台检测结论（见上文，待 DevEco 补跑）

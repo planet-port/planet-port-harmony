@@ -33,7 +33,8 @@ add_compile_options(
 
 # ---- ZeroTier 核心（对齐 Android 版编译清单：node 全集 GLOB + OSUtils） ----
 file(GLOB ZT_NODE_SRC CONFIGURE_DEPENDS ${ZT_DIR}/node/*.cpp)
-list(REMOVE_ITEM ZT_NODE_SRC "${ZT_DIR}/node/EmbeddedNetworkController.cpp")
+# 不排除 EmbeddedNetworkController.cpp：官方 tarball 中该文件位于 nonfree/controller/，
+# bootstrap 从不拷贝 nonfree/，node/ 内本无此文件，原 REMOVE_ITEM 是对空集的无操作，已删
 
 add_library(zt_core OBJECT
     ${ZT_NODE_SRC}
