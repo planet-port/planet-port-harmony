@@ -1,11 +1,11 @@
 # ZeroTier 核心源码（bootstrap 拉取，不入库）
-Core/
+/Core/
 
 # 构建产物
 /build/
 /entry/build/
 /entry/.cxx/
-/core/build/
+/core/build*/
 *.hap
 *.so
 *.a
