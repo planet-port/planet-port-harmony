@@ -1,0 +1,8 @@
+{
+  "name": "planet-port-qrtransfer-tests",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pako": "^2.1.0"
+  }
+}

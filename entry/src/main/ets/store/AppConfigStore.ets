@@ -17,6 +17,17 @@ import { JsonFileStore } from './JsonFileStore';
 
 type ChangeCb = () => void;
 
+/**
+ * 首页 UI 快照（A5-T7 复合读契约）：planets + selected/active 指针三域一次返回。
+ * 调用方 AppState.reload 原逐域读 planets/selectedPlanetId/activePlanetId 会链式
+ * 触发 ≈5 次文件读（M-6 挂账）；本 API 单次 readListFile + 单次 readPrefs 收口。
+ */
+export interface UiSnapshot {
+  planets: PlanetProfile[];
+  selectedPlanetId: string;
+  activePlanetId: string;
+}
+
 export class AppConfigStore {
   readonly paths: StorePaths;
   private files: JsonFileStore = new JsonFileStore();
@@ -54,6 +65,35 @@ export class AppConfigStore {
 
   async writePlanets(profiles: PlanetProfile[]): Promise<void> {
     await this.mutate(() => this.writePlanetsLocked(profiles));
+  }
+
+  /**
+   * UI 快照复合读（A5-T7，M-6 收口）：单次 readListFile + 单次 readPrefs 完成
+   * planets/selected/active 三域，selected/active 的 planets 存在性校验逻辑自
+   * selectedPlanetId()/activePlanetId() 原样内联（两原 API 保留，其余调用点不动）。
+   * 不做内存缓存：跨进程文件写新鲜度是 A4 既定语义（VpnExt 写 / 主进程读必须
+   * 每次见盘面），缓存会把共享读方冻结在陈旧值。
+   */
+  async readUiSnapshot(): Promise<UiSnapshot> {
+    await this.bootstrap();
+    const list = await this.readListFile(this.paths.planetsFile, PlanetProfile.fromJson);
+    const planets = list === null || list.length === 0 ? [PlanetProfile.OFFICIAL] : list;
+    const prefs = await this.readPrefs();
+    // selectedPlanetId() 内联：表内存在才用，否则回退官方行星
+    const selected = planets.some(p => p.id === prefs.selectedPlanetId)
+      ? prefs.selectedPlanetId : PlanetProfile.OFFICIAL_ID;
+    // activePlanetId() 内联：null 回退官方行星（「从未激活」）；表内存在才用
+    let active = PlanetProfile.OFFICIAL_ID;
+    if (prefs.activePlanetId !== null) {
+      const id = prefs.activePlanetId as string;
+      active = planets.some(p => p.id === id) ? id : PlanetProfile.OFFICIAL_ID;
+    }
+    const snap: UiSnapshot = {
+      planets: planets,
+      selectedPlanetId: selected,
+      activePlanetId: active,
+    };
+    return snap;
   }
 
   /** official 永在最前；档案本体以既有条目为准（缺失才用固定 OFFICIAL 兜底） */

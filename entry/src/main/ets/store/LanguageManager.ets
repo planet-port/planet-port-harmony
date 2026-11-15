@@ -52,6 +52,12 @@ export class LanguageManager {
 
   static current(): AppLanguage { return LanguageManager.currentLang; }
 
+  /** 当前生效语言（'system' 按系统 locale 解析）；A5 L10n 查表入口 */
+  static resolved(): AppLanguage {
+    return LanguageManager.currentLang === AppLanguage.System
+      ? LanguageManager.systemLanguage() : LanguageManager.currentLang;
+  }
+
   static async set(l: AppLanguage): Promise<void> {
     LanguageManager.currentLang = l;
     await StoreRepo.store.writePrefs(p => {
@@ -62,10 +68,7 @@ export class LanguageManager {
 
   /** 按当前应用语言查表（未指定时回退系统语言）；缺键回退 zh-Hans 再回退 key */
   static loc(key: string): string {
-    const sys = LanguageManager.systemLanguage();
-    const lang = LanguageManager.currentLang === AppLanguage.System
-      ? sys : LanguageManager.currentLang;
-    const table = LanguageManager.tableFor(lang);
+    const table = LanguageManager.tableFor(LanguageManager.resolved());
     return table[key] ?? TABLE_ZH_HANS[key] ?? key;
   }
 

@@ -5,5 +5,7 @@
   "main": "",
   "author": "",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "pako": "^2.1.0"
+  }
 }

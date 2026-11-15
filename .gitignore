@@ -16,6 +16,10 @@
 /entry/oh_modules/
 **/oh_modules/
 
+# qrtransfer node 金标向量测试的本地依赖（tests/package.json 入库，node_modules 不入）
+**/node_modules/
+package-lock.json
+
 # 本地环境
 /local.properties
 /.idea/

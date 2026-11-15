@@ -1,6 +1,7 @@
 {
   "string": [
     { "name": "module_desc", "value": "Planet Port 主模块" },
-    { "name": "EntryAbility_desc", "value": "Planet Port" }
+    { "name": "EntryAbility_desc", "value": "Planet Port" },
+    { "name": "camera_used_reason", "value": "扫描二维码以导入行星与网络（相机取景由系统扫码服务承载）" }
   ]
 }

@@ -183,6 +183,8 @@ export class AppPrefs {
   maxNetworks: number = 2; // 2..6
   connectOnDemand: boolean = false; // 平台无 On Demand（降级①），字段保留直译
   identityPerPlanet: boolean = false;
+  /** #28 开 App 自动恢复（A5-T12；iOS On Demand 无等价物的替代门控，默认开） */
+  autoRestore: boolean = true;
 
   static fromJson(o: Record<string, Object>): AppPrefs {
     const p = new AppPrefs();
@@ -198,6 +200,7 @@ export class AppPrefs {
     p.maxNetworks = (o['maxNetworks'] ?? 2) as number;
     p.connectOnDemand = (o['connectOnDemand'] ?? false) as boolean;
     p.identityPerPlanet = (o['identityPerPlanet'] ?? false) as boolean;
+    p.autoRestore = (o['autoRestore'] ?? true) as boolean;
     return p;
   }
 
@@ -219,6 +222,7 @@ export class AppPrefs {
       'maxNetworks': this.maxNetworks,
       'connectOnDemand': this.connectOnDemand,
       'identityPerPlanet': this.identityPerPlanet,
+      'autoRestore': this.autoRestore,
     };
     return o as Record<string, Object>;
   }
