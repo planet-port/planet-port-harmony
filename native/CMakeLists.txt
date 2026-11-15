@@ -58,6 +58,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "OHOS")
         dataplane/ArpTable.cpp dataplane/NdpTable.cpp dataplane/NAT44.cpp
         dataplane/NetworkContext.cpp dataplane/RoutePlanner.cpp
         dataplane/FrameConverter.cpp dataplane/Dataplane.cpp dataplane/UdpCom.cpp
+        runtime/TunnelRuntime.cpp
+        theme/ColorMath.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/../entry/src/main/cpp/anchor.cpp # hvigor native 探测锚点，见文件头注释
         $<TARGET_OBJECTS:zt_core>
     )
@@ -111,10 +113,18 @@ if(PP_BUILD_TESTS AND NOT CMAKE_SYSTEM_NAME STREQUAL "OHOS")
         dataplane/ArpTable.cpp dataplane/NdpTable.cpp dataplane/NAT44.cpp
         dataplane/NetworkContext.cpp dataplane/RoutePlanner.cpp
         dataplane/FrameConverter.cpp dataplane/Dataplane.cpp dataplane/UdpCom.cpp
+        runtime/TunnelRuntime.cpp
+        theme/ColorMath.cpp
         bridge/CoreBridge.cpp $<TARGET_OBJECTS:zt_core>
     )
     target_include_directories(pp_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    # TunnelRuntime 测试注入通道（testFeedNetConf/testFeedEvent/testOnCoreAction）
+    # 仅测试目标可见——OHOS 侧 planetport_core 不定义，生产路径零影响
+    target_compile_definitions(pp_tests PRIVATE PP_TUNNELRUNTIME_TEST_HOOKS)
     target_link_libraries(pp_tests PRIVATE zt_core GTest::gtest_main)
+    # enable_testing 是 ctest 入口（gtest_discover_tests 只注册不生成根
+    # CTestTestfile——A2 起 ctest 报 No tests were found 的根因，T6 补上）
+    enable_testing()
     include(GoogleTest)
     gtest_discover_tests(pp_tests)
 endif()

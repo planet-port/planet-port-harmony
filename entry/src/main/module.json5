@@ -26,6 +26,14 @@
         ]
       }
     ],
+    "extensionAbilities": [
+      {
+        "name": "ZeroTierVpnExtAbility",
+        "srcEntry": "./ets/vpnext/ZeroTierVpnExtAbility.ets",
+        "type": "vpn",
+        "exported": false
+      }
+    ],
     "requestPermissions": [
       { "name": "ohos.permission.INTERNET" },
       { "name": "ohos.permission.GET_NETWORK_INFO" }
