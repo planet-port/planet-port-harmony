@@ -114,7 +114,7 @@ Core/
 /build/
 /entry/build/
 /entry/.cxx/
-/native/build/
+/native/build*/
 *.hap
 *.so
 *.a
@@ -540,11 +540,11 @@ else
     done
     cp "$SRC/version.h" "$CORE_DIR/"
     mkdir -p "$CORE_DIR/ext/nlohmann" \
-        "$CORE_DIR/ext/prometheus-cpp-lite-1.0/native/include" \
+        "$CORE_DIR/ext/prometheus-cpp-lite-1.0/core/include" \
         "$CORE_DIR/ext/prometheus-cpp-lite-1.0/simpleapi/include"
     cp "$SRC/ext/nlohmann/json.hpp" "$CORE_DIR/ext/nlohmann/"
-    cp -R "$SRC/ext/prometheus-cpp-lite-1.0/native/include/prometheus" \
-        "$CORE_DIR/ext/prometheus-cpp-lite-1.0/native/include/"
+    cp -R "$SRC/ext/prometheus-cpp-lite-1.0/core/include/prometheus" \
+        "$CORE_DIR/ext/prometheus-cpp-lite-1.0/core/include/"
     cp -R "$SRC/ext/prometheus-cpp-lite-1.0/simpleapi/include/prometheus" \
         "$CORE_DIR/ext/prometheus-cpp-lite-1.0/simpleapi/include/"
     cp -R "$SRC/ext/arm32-neon-salsa2012-asm" "$SRC/ext/x64-salsa2012-asm" "$CORE_DIR/ext/"
@@ -695,7 +695,7 @@ target_include_directories(zt_core PUBLIC
     ${ZT_DIR}/include/
     ${ZT_DIR}/node/
     ${ZT_DIR}/ext/
-    ${ZT_DIR}/ext/prometheus-cpp-lite-1.0/native/include/
+    ${ZT_DIR}/ext/prometheus-cpp-lite-1.0/core/include/
     ${ZT_DIR}/ext/prometheus-cpp-lite-1.0/simpleapi/include/
 )
 
@@ -711,7 +711,7 @@ endif()
 - [ ] **Step 3: 首次交叉编译探测（零补丁直编）**
 
 ```bash
-cmake -B native/build-ohos -S core \
+cmake -B native/build-ohos -S native \
   -DCMAKE_TOOLCHAIN_FILE="/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake" \
   -DCMAKE_BUILD_TYPE=Release \
   -DOHOS_ARCH=arm64-v8a \
@@ -1096,7 +1096,7 @@ endif()
 - [ ] **Step 4: 构建 host 冒烟（macOS 原生工具链，非交叉）**
 
 ```bash
-cmake -B native/build-host -S core -DCMAKE_BUILD_TYPE=Debug -DPP_BUILD_SMOKE=ON
+cmake -B native/build-host -S native -DCMAKE_BUILD_TYPE=Debug -DPP_BUILD_SMOKE=ON
 cmake --build native/build-host -j8
 ./native/build-host/smoke
 ```
@@ -1162,7 +1162,7 @@ ArkUI 原生写成。多行星并存、多网络同连、默认路由与 DNS 均
 host 冒烟（macOS 本机验证核心，无需真机）：
 
 ​```bash
-cmake -B native/build-host -S core -DCMAKE_BUILD_TYPE=Debug -DPP_BUILD_SMOKE=ON
+cmake -B native/build-host -S native -DCMAKE_BUILD_TYPE=Debug -DPP_BUILD_SMOKE=ON
 cmake --build native/build-host -j8 && ./native/build-host/smoke
 ​```
 

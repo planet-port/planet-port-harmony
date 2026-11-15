@@ -1,4 +1,4 @@
-# core/CMakeLists.txt — libplanetport_core 构建入口
+# native/CMakeLists.txt — libplanetport_core 构建入口
 #
 # 零补丁原则：Core/（bootstrap 拉取）不做任何修改；平台适配只经 -D 注入。
 # 三个目标：
