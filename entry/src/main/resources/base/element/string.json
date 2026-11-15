@@ -1,0 +1,6 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "Planet Port 主模块" },
+    { "name": "EntryAbility_desc", "value": "Planet Port" }
+  ]
+}

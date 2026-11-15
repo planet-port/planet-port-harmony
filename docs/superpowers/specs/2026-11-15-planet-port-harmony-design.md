@@ -144,7 +144,7 @@ planet-port-harmony/
 │  │  ├─ vpnext/             # ZeroTierVpnExt.ets（VpnExtensionAbility 壳）
 │  │  └─ common/             # IPC 事件契约/共享沙盒路径
 │  └─ resources/             # 三语 + 图标资产 + 背景图
-├─ core/                     # C++（CMake → libplanetport_core.so）
+├─ native/                   # C++（CMake → libplanetport_core.so；不叫 core/——大小写不敏感卷上与 Core/ 折叠）
 │  ├─ bridge/                # CoreBridge.cpp（直译 ZTBridge.mm 529 行）
 │  ├─ dataplane/             # FrameConverter/ARP/NDP/NAT44/NetworkContext/LPM/RoutePlanner + swap()
 │  ├─ napi/                  # NAPI 绑定（3 函数族，~500 行）
