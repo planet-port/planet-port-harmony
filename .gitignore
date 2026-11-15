@@ -5,7 +5,7 @@
 /build/
 /entry/build/
 /entry/.cxx/
-/core/build*/
+/native/build*/
 *.hap
 *.so
 *.a
