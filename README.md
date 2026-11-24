@@ -6,7 +6,7 @@
 ArkUI 原生写成。多行星并存、多网络同连、默认路由与 DNS 均可控。
 
 > 非官方客户端，与 ZeroTier, Inc. 无隶属关系。
-> 开发中（轨道 A），功能对齐 [planet-port-ios](../planet-port-ios) v1.4.0。
+> 开发中（轨道 A），功能对齐 [planet-port-ios](../planet-port-ios) v1.5.0。
 
 ## 从源码构建
 
