@@ -433,9 +433,10 @@ export struct AddPlanetPage {
     try {
       const worldId = worldIdOf(data);
       if (worldId !== null) {
-        const ids = await this.importer.existingWorldIds();
-        if (ids.has(worldId)) {
-          this.alertMsg = this.locFmt('addplanet.duplicate %@', [worldId]);
+        const owners = await this.importer.worldIdOwners();
+        const owner = owners.get(worldId);
+        if (owner !== undefined) {
+          this.alertMsg = this.locFmt('addplanet.duplicate %@', [this.displayNameOf(owner)]);
           return;
         }
       }

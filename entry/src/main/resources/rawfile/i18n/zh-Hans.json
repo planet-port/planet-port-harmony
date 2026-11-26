@@ -7,7 +7,7 @@
   "addplanet.action": "添加行星服务器",
   "addplanet.chooseFile": "选择行星文件",
   "addplanet.downloading": "正在下载行星文件…",
-  "addplanet.duplicate %@": "已存在相同的 Planet（World ID %@），不能重复添加。",
+  "addplanet.duplicate %@": "导入的服务器与%@的 ID 相同，不需要重复导入。",
   "addplanet.importFailed": "导入失败",
   "addplanet.namePlaceholder": "行星名称",
   "addplanet.previewName": "新行星",

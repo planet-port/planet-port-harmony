@@ -7,7 +7,7 @@
   "addplanet.action": "Add Planet Server",
   "addplanet.chooseFile": "Choose planet file",
   "addplanet.downloading": "Downloading planet file…",
-  "addplanet.duplicate %@": "A planet with the same World ID (%@) already exists and cannot be added again.",
+  "addplanet.duplicate %@": "The imported server has the same ID as %@. No need to import it again.",
   "addplanet.importFailed": "Import Failed",
   "addplanet.namePlaceholder": "Planet name",
   "addplanet.previewName": "New Planet",

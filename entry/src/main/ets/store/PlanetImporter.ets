@@ -204,20 +204,20 @@ export class PlanetImporter {
   }
 
   /**
-   * 已存在 World ID 集合（16 位 hex；iOS existingWorldIds 直译）：地球常量
-   * 种子 + 各行星 .planet 文件解析值，用于添加时查重。
+   * World ID → 行星档案映射（16 位 hex 键；官方地球恒为官方档案），
+   * 用于添加时查重并报出冲突行星。
    */
-  async existingWorldIds(): Promise<Set<string>> {
-    const ids = new Set<string>();
-    ids.add(hex16FromNumber(ZT_WORLD_ID_EARTH));
+  async worldIdOwners(): Promise<Map<string, PlanetProfile>> {
+    const map = new Map<string, PlanetProfile>();
+    map.set(hex16FromNumber(ZT_WORLD_ID_EARTH), PlanetProfile.OFFICIAL);
     const planets = await this.store.readPlanets();
     for (const p of planets) {
       const info = await this.inspectPlanetFile(p);
       if (info !== null) {
-        ids.add(info.worldIdHex);
+        map.set(info.worldIdHex, p);
       }
     }
-    return ids;
+    return map;
   }
 
   /**
